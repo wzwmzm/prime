@@ -1,0 +1,75 @@
+// primenum
+package main
+
+import (
+	"fmt"
+	"math"
+	"runtime"
+	"time"
+)
+
+const (
+	maxproce int    = 8       //设置线程的数目
+	maxnum   uint64 = 1000000 //最大素数个数
+	tab      uint64 = 100000  //统计区间的大小
+)
+
+var listNum [maxnum]uint64 //存放计算得出的素数
+
+func main() {
+	/////////////初始化--设置线程数////////////////////
+	ps := runtime.GOMAXPROCS(maxproce)
+	fmt.Printf("原始线程数 = %d,  现在设定线程数 = %d\n", ps, maxproce)
+
+	if ps == 0 {
+		fmt.Println("设置线程数失败!!！")
+		return
+	}
+	//////////////初始化----////////////////////////////
+	listNum[0] = 2
+	i := uint64(3)   //待测数，不断递增
+	n := uint64(0)   //质数的编号
+	ii := uint64(1)  //第几个统计区间
+	tem := uint64(0) //上一敬意最后一个质数编号，用于计算本区间质数个数
+
+	////求取质数
+	s := func() {
+		for {
+			tem1 := uint64(math.Sqrt(float64(i))) + 1 //缩小范围
+			tem2 := true
+
+			for num := uint64(0); num <= n; { //计算i是不是质数
+				if listNum[num] > tem1 {
+					break
+				}
+				if i%listNum[num] == 0 {
+					tem2 = false
+					break
+				}
+				num++
+			}
+
+			if tem2 == true { //得到一个质数
+				n++
+				//				println(n, "------", i)
+
+				listNum[n] = i     //将质数存入数组
+				if n == maxnum-1 { //计算到第maxnum个质数时程序停止
+					return
+				}
+			}
+			//			println(i, "=======", ii*tab)
+			if i == ii*tab {
+				fmt.Printf("%d -------------- %d\n", ii*tab, n-tem)
+				ii++
+				tem = n
+			}
+			i++
+		}
+	}
+
+	t1 := time.Now()
+	s()
+	t2 := time.Since(t1)
+	fmt.Printf("共花费时间 %v", t2)
+}
